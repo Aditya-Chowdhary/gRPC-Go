@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-option go_package = "github.com/Aditya-Chowdhary/gRPC-Go/proto/dummy/v1";
-
-message DummyMessage {}
-service DummyService {}

@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 
+	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v1"
 	"google.golang.org/grpc"
 )
 
@@ -32,6 +33,10 @@ func main() {
 
 	opts := []grpc.ServerOption{}
 	s := grpc.NewServer(opts...)
+
+	pb.RegisterTodoServiceServer(s, &server{
+		d: New(),
+	})
 
 	defer s.Stop()
 	if err := s.Serve(lis); err != nil {
