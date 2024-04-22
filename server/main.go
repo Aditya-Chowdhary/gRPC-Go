@@ -11,12 +11,13 @@ import (
 
 func main() {
 	args := os.Args[1:]
-
+	var addr string
 	if len(args) == 0 {
-		log.Fatalln("usage: server [IP_ADDR]")
+		// log.Fatalln("usage: client [IP_ADDR]")
+		addr = "0.0.0.0:50051"
+	} else {
+		addr = args[0]
 	}
-
-	addr := args[0]
 	lis, err := net.Listen("tcp", addr)
 
 	if err != nil {

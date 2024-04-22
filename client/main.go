@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -15,13 +16,13 @@ import (
 
 func main() {
 	args := os.Args[1:]
-
+	var addr string
 	if len(args) == 0 {
-		log.Fatalln("usage: client [IP_ADDR]")
+		// log.Fatalln("usage: client [IP_ADDR]")
+		addr = "0.0.0.0:50051"
+	} else {
+		addr = args[0]
 	}
-
-	addr := args[0]
-
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
@@ -36,6 +37,10 @@ func main() {
 	fmt.Println("-------ADD--------")
 	dueDate := time.Now().Add(5 * time.Second)
 	addTask(c, "This is a task", dueDate)
+	fmt.Println("------------------")
+
+	fmt.Println("-------List--------")
+	printTasks(c)
 	fmt.Println("------------------")
 
 	defer func(conn *grpc.ClientConn) {
@@ -56,4 +61,25 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 	}
 	fmt.Printf("added task: %d\n", res.Id)
 	return res.Id
+}
+
+func printTasks(c pb.TodoServiceClient) {
+	req := &pb.ListTasksRequest{}
+	stream, err := c.ListTasks(context.Background(), req)
+	if err != nil {
+		log.Fatalf("unexpected error: %v", err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			log.Fatalf("unexpected error: %v", err)
+		}
+
+		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)
+	}
 }
