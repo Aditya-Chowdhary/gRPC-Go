@@ -37,10 +37,22 @@ func main() {
 	fmt.Println("-------ADD--------")
 	dueDate := time.Now().Add(5 * time.Second)
 	addTask(c, "This is a task", dueDate)
+	addTask(c, "This is another task", dueDate)
+	addTask(c, "This is one more task", dueDate)
 	fmt.Println("------------------")
 
 	fmt.Println("-------List--------")
 	printTasks(c)
+	fmt.Println("------------------")
+	
+	fmt.Println("------Update-------")
+	updates := []*pb.UpdateTasksRequest{
+		{Task: &pb.Task{Id: 1, Description: "This is actually task 1"}},
+		{Task: &pb.Task{Id: 2, DueDate: timestamppb.New(dueDate.Add(5 * time.Hour))}},
+		{Task: &pb.Task{Id: 3, Done: true}},
+	}
+	updateTask(c, updates...)
+	printTasks(c)	
 	fmt.Println("------------------")
 
 	defer func(conn *grpc.ClientConn) {
@@ -81,5 +93,29 @@ func printTasks(c pb.TodoServiceClient) {
 		}
 
 		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)
+	}
+}
+
+func updateTask(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
+	stream, err := c.UpdateTasks(context.Background())
+	if err != nil {
+		log.Fatalf("unexpected error: %v", err)
+	}
+
+	for _, req := range reqs {
+		err := stream.Send(req)
+		if err != nil {
+			log.Fatalf("unexpected error: %v", err)
+			return 
+		}
+
+		if req.Task != nil {
+			fmt.Printf("updated task with id: %d\n", req.Task.Id)
+		}
+
+	}
+
+	if _, err := stream.CloseAndRecv(); err != nil {
+		log.Fatalf("unexpected error: %v", err)
 	}
 }
