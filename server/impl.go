@@ -40,3 +40,18 @@ func (s *server) UpdateTasks(stream pb.TodoService_UpdateTasksServer) error {
 		s.d.updateTask(req.Task.Id, req.Task.Description, req.Task.DueDate.AsTime(), req.Task.Done)
 	}
 }
+func (s *server) DeleteTasks(stream pb.TodoService_DeleteTasksServer) error {
+	for {
+		req, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		s.d.deleteTask(req.Id)
+		stream.Send(&pb.DeleteTasksResponse{})
+	}
+}

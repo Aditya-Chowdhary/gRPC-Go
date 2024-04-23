@@ -49,3 +49,14 @@ func (d *inMemoryDb) updateTask(id uint64, description string, dueDate time.Time
 
 	return fmt.Errorf("task with id %d not found", id)
 }
+
+func (d *inMemoryDb) deleteTask(id uint64) error {
+	for i, task := range d.tasks {
+		if task.Id == id {
+			d.tasks = append(d.tasks[:i], d.tasks[i+1:]...)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("task with id %d not found", id)
+}

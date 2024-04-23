@@ -44,7 +44,7 @@ func main() {
 	fmt.Println("-------List--------")
 	printTasks(c)
 	fmt.Println("------------------")
-	
+
 	fmt.Println("------Update-------")
 	updates := []*pb.UpdateTasksRequest{
 		{Task: &pb.Task{Id: 1, Description: "This is actually task 1"}},
@@ -52,7 +52,16 @@ func main() {
 		{Task: &pb.Task{Id: 3, Done: true}},
 	}
 	updateTask(c, updates...)
-	printTasks(c)	
+	printTasks(c)
+	fmt.Println("------------------")
+
+	fmt.Println("---------DELETE----------")
+	deleteTasks(c, []*pb.DeleteTasksRequest{
+		{Id: 1},
+		{Id: 2},
+		{Id: 3},
+	}...)
+	printTasks(c)
 	fmt.Println("------------------")
 
 	defer func(conn *grpc.ClientConn) {
@@ -106,7 +115,7 @@ func updateTask(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
 		err := stream.Send(req)
 		if err != nil {
 			log.Fatalf("unexpected error: %v", err)
-			return 
+			return
 		}
 
 		if req.Task != nil {
@@ -118,4 +127,41 @@ func updateTask(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
 	if _, err := stream.CloseAndRecv(); err != nil {
 		log.Fatalf("unexpected error: %v", err)
 	}
+}
+
+func deleteTasks(c pb.TodoServiceClient, reqs ...*pb.DeleteTasksRequest) {
+	stream, err := c.DeleteTasks(context.Background())
+
+	if err != nil {
+		log.Fatalf("unexpected error: %v", err)
+	}
+
+	waitc := make(chan struct{})
+
+	go func() {
+		for {
+			_, err := stream.Recv()
+
+			if err == io.EOF {
+				close(waitc)
+				break
+			}
+			if err != nil {
+				log.Fatalf("error while receiving: %v\n", err)
+			}
+
+			log.Println("deleted tasks")
+		}
+	}()
+
+	for _, req := range reqs {
+		if err := stream.Send(req); err != nil {
+			return
+		}
+	}
+	if err := stream.CloseSend(); err != nil {
+		return
+	}
+
+	<-waitc
 }
