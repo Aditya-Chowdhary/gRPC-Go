@@ -3,6 +3,7 @@ syntax = "proto3";
 package todo.v2;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
 
 option go_package = "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2";
 
@@ -30,6 +31,7 @@ message AddTaskResponse {
 }
 
 message ListTasksRequest {
+    google.protobuf.FieldMask mask = 1;
 }
 
 message ListTasksResponse {

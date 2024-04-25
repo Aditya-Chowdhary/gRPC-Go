@@ -11,6 +11,7 @@ import (
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -41,8 +42,12 @@ func main() {
 	addTask(c, "This is one more task", dueDate)
 	fmt.Println("------------------")
 
+	fm, err := fieldmaskpb.New(&pb.Task{}, "id")
+	if err != nil {
+		log.Fatalf("unexpected error: %v", err)
+	}
 	fmt.Println("-------List--------")
-	printTasks(c)
+	printTasks(c, fm)
 	fmt.Println("------------------")
 
 	fmt.Println("------Update-------")
@@ -52,7 +57,7 @@ func main() {
 		{Id: 3, Done: true},
 	}
 	updateTask(c, updates...)
-	printTasks(c)
+	printTasks(c, nil)
 	fmt.Println("------------------")
 
 	fmt.Println("---------DELETE----------")
@@ -61,7 +66,7 @@ func main() {
 		{Id: 2},
 		{Id: 3},
 	}...)
-	printTasks(c)
+	printTasks(c, nil)
 	fmt.Println("------------------")
 
 	defer func(conn *grpc.ClientConn) {
@@ -84,8 +89,10 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 	return res.Id
 }
 
-func printTasks(c pb.TodoServiceClient) {
-	req := &pb.ListTasksRequest{}
+func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
+	req := &pb.ListTasksRequest{
+		Mask: fm,
+	}
 	stream, err := c.ListTasks(context.Background(), req)
 	if err != nil {
 		log.Fatalf("unexpected error: %v", err)
