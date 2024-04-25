@@ -75,9 +75,9 @@ func main() {
 	// addTask(c, "", dueDate)
 	// fmt.Println("----------------------")
 
-	fmt.Println("--------ERROR---------")
-	addTask(c, "notEmpty", time.Now().Add(-5*time.Second))
-	fmt.Println("----------------------")
+	// fmt.Println("--------ERROR---------")
+	// addTask(c, "notEmpty", time.Now().Add(-5*time.Second))
+	// fmt.Println("----------------------")
 
 	defer func(conn *grpc.ClientConn) {
 		if err := conn.Close(); err != nil {
@@ -109,10 +109,13 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 }
 
 func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	req := &pb.ListTasksRequest{
 		Mask: fm,
 	}
-	stream, err := c.ListTasks(context.Background(), req)
+	stream, err := c.ListTasks(ctx, req)
 	if err != nil {
 		log.Fatalf("unexpected error: %v", err)
 	}
@@ -125,6 +128,11 @@ func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
 
 		if err != nil {
 			log.Fatalf("unexpected error: %v", err)
+		}
+
+		if res.Overdue {
+			log.Println("CANCEL called")
+			cancel()
 		}
 
 		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)

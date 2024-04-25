@@ -42,11 +42,24 @@ func (s *server) AddTask(_ context.Context, in *pb.AddTaskRequest) (*pb.AddTaskR
 }
 
 func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListTasksServer) error {
+	ctx := stream.Context()
+	
 	return s.d.getTasks(func(t interface{}) error {
+		select {
+		case <-ctx.Done():
+			switch ctx.Err() {
+			case context.Canceled:
+				log.Printf("request canceled: %s\n", ctx.Err())
+			default:
+			}
+			return ctx.Err()
+		case <-time.After(1 * time.Millisecond):
+		}
 		task := t.(*pb.Task)
 
 		Filter(task, req.Mask)
 
+		log.Println(task)
 		overdue := task.DueDate != nil && !task.Done && task.DueDate.AsTime().Before(time.Now().UTC())
 		err := stream.Send(&pb.ListTasksResponse{
 			Task:    task,
