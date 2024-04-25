@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v1"
+	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -19,9 +19,9 @@ func New() db {
 func (d *inMemoryDb) addTask(description string, dueDate time.Time) (uint64, error) {
 	nextId := uint64(len(d.tasks) + 1)
 	task := &pb.Task{
-		Id: nextId,
+		Id:          nextId,
 		Description: description,
-		DueDate: timestamppb.New(dueDate),
+		DueDate:     timestamppb.New(dueDate),
 	}
 	d.tasks = append(d.tasks, task)
 	return nextId, nil
@@ -36,7 +36,7 @@ func (d *inMemoryDb) getTasks(f func(interface{}) error) error {
 	return nil
 }
 
-func (d *inMemoryDb) updateTask(id uint64, description string, dueDate time.Time, done bool) error  {
+func (d *inMemoryDb) updateTask(id uint64, description string, dueDate time.Time, done bool) error {
 	for i, task := range d.tasks {
 		if task.Id == id {
 			t := d.tasks[i]

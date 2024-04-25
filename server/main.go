@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v1"
+	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc"
 )
 

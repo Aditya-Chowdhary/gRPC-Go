@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v1"
+	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -47,9 +47,9 @@ func main() {
 
 	fmt.Println("------Update-------")
 	updates := []*pb.UpdateTasksRequest{
-		{Task: &pb.Task{Id: 1, Description: "This is actually task 1"}},
-		{Task: &pb.Task{Id: 2, DueDate: timestamppb.New(dueDate.Add(5 * time.Hour))}},
-		{Task: &pb.Task{Id: 3, Done: true}},
+		{Id: 1, Description: "This is actually task 1"},
+		{Id: 2, DueDate: timestamppb.New(dueDate.Add(5 * time.Hour))},
+		{Id: 3, Done: true},
 	}
 	updateTask(c, updates...)
 	printTasks(c)
@@ -118,8 +118,8 @@ func updateTask(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
 			return
 		}
 
-		if req.Task != nil {
-			fmt.Printf("updated task with id: %d\n", req.Task.Id)
+		if req != nil {
+			fmt.Printf("updated task with id: %d\n", req.Id)
 		}
 
 	}

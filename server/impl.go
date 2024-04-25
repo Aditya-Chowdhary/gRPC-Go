@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 	"time"
 
-	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v1"
+	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
+	"google.golang.org/protobuf/proto"
 )
 
 func (s *server) AddTask(_ context.Context, in *pb.AddTaskRequest) (*pb.AddTaskResponse, error) {
@@ -14,12 +16,13 @@ func (s *server) AddTask(_ context.Context, in *pb.AddTaskRequest) (*pb.AddTaskR
 	return &pb.AddTaskResponse{Id: id}, nil
 }
 
+
 func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListTasksServer) error {
 	return s.d.getTasks(func(t interface{}) error {
 		task := t.(*pb.Task)
 		overdue := task.DueDate != nil && !task.Done && task.DueDate.AsTime().Before(time.Now().UTC())
 		err := stream.Send(&pb.ListTasksResponse{
-			Task: task,
+			Task:    task,
 			Overdue: overdue,
 		})
 		return err
@@ -27,17 +30,27 @@ func (s *server) ListTasks(req *pb.ListTasksRequest, stream pb.TodoService_ListT
 }
 
 func (s *server) UpdateTasks(stream pb.TodoService_UpdateTasksServer) error {
+	totalLength := 0
+
 	for {
 		req, err := stream.Recv()
 
 		if err == io.EOF {
+			log.Println("Total: ", totalLength)
 			return stream.SendAndClose(&pb.UpdateTasksResponse{})
 		}
 		if err != nil {
 			return err
 		}
+		out, _ := proto.Marshal(req)
+		totalLength += len(out)
 
-		s.d.updateTask(req.Task.Id, req.Task.Description, req.Task.DueDate.AsTime(), req.Task.Done)
+		s.d.updateTask(
+			req.Id,
+			req.Description,
+			req.DueDate.AsTime(),
+			req.Done,
+		)
 	}
 }
 func (s *server) DeleteTasks(stream pb.TodoService_DeleteTasksServer) error {
