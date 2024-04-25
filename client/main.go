@@ -10,7 +10,9 @@ import (
 
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -69,6 +71,14 @@ func main() {
 	printTasks(c, nil)
 	fmt.Println("------------------")
 
+	// fmt.Println("--------ERROR---------")
+	// addTask(c, "", dueDate)
+	// fmt.Println("----------------------")
+
+	fmt.Println("--------ERROR---------")
+	addTask(c, "notEmpty", time.Now().Add(-5*time.Second))
+	fmt.Println("----------------------")
+
 	defer func(conn *grpc.ClientConn) {
 		if err := conn.Close(); err != nil {
 			log.Fatalf("unexpected error: %v", err)
@@ -83,7 +93,16 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 	}
 	res, err := c.AddTask(context.Background(), req)
 	if err != nil {
-		panic(err)
+		if s, ok := status.FromError(err); ok {
+			switch s.Code() {
+			case codes.InvalidArgument, codes.Internal:
+				log.Fatalf("%s: %s", s.Code(), s.Message())
+			default:
+				log.Fatal(s)
+			}
+		} else {
+			panic(err)
+		}
 	}
 	fmt.Printf("added task: %d\n", res.Id)
 	return res.Id
