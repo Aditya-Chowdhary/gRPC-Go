@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,14 +28,14 @@ func main() {
 		addr = args[0]
 	}
 
-	creds, err := credentials.NewClientTLSFromFile("./certs/ca_cert.pem", "x.test.example.com")
+	_, err := credentials.NewClientTLSFromFile("./certs/ca_cert.pem", "x.test.example.com")
 	if err != nil {
 		log.Fatalf("failed to load credentials: %v", err)
 	}
 
 	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(creds),
-		// grpc.WithTransportCredentials(insecure.NewCredentials()),
+		// grpc.WithTransportCredentials(creds),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithUnaryInterceptor(unaryAuthInterceptor),
 		grpc.WithStreamInterceptor(streamAuthInterceptor),
 	}
