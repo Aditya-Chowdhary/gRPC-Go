@@ -7,6 +7,7 @@ import (
 
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 func main() {
@@ -30,9 +31,18 @@ func main() {
 		}
 	}(lis)
 
+	creds, err := credentials.NewServerTLSFromFile("./certs/server_cert.pem", "./certs/server_key.pem")
+	if err != nil {
+		log.Fatalf("failed to create credentials: %v", err)
+	}
+
 	log.Printf("listening at %s\n", addr)
 
-	opts := []grpc.ServerOption{}
+	opts := []grpc.ServerOption{
+		grpc.Creds(creds),
+		grpc.UnaryInterceptor(unaryAuthInterceptor),
+		grpc.StreamInterceptor(streamAuthInterceptor),
+	}
 	s := grpc.NewServer(opts...)
 
 	pb.RegisterTodoServiceServer(s, &server{
