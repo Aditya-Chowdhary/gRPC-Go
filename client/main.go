@@ -109,8 +109,10 @@ func addTask(c pb.TodoServiceClient, description string, dueDate time.Time) uint
 }
 
 func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	// ctx, cancel := context.WithCancel(context.Background())
+	// ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
+	// defer cancel()
+	ctx := context.Background()
 
 	req := &pb.ListTasksRequest{
 		Mask: fm,
@@ -130,10 +132,10 @@ func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
 			log.Fatalf("unexpected error: %v", err)
 		}
 
-		if res.Overdue {
-			log.Println("CANCEL called")
-			cancel()
-		}
+		// if res.Overdue {
+		// 	log.Println("CANCEL called")
+		// 	cancel()
+		// }
 
 		fmt.Println(res.Task.String(), "overdue: ", res.Overdue)
 	}
