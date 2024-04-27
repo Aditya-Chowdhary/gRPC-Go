@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/retry"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -33,10 +34,18 @@ func main() {
 		log.Fatalf("failed to load credentials: %v", err)
 	}
 
+	retryOpts := []retry.CallOption{
+		retry.WithMax(3),
+		retry.WithBackoff(retry.BackoffExponential(100*time.Millisecond)),
+		retry.WithCodes(codes.Unavailable),
+	}
+
 	opts := []grpc.DialOption{
 		// grpc.WithTransportCredentials(creds),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(unaryAuthInterceptor),
+		grpc.WithChainUnaryInterceptor(
+			retry.UnaryClientInterceptor(retryOpts...),
+			unaryAuthInterceptor),
 		grpc.WithStreamInterceptor(streamAuthInterceptor),
 	}
 
