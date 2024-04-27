@@ -6,6 +6,8 @@ import (
 	"os"
 
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -37,11 +39,18 @@ func main() {
 	}
 
 	log.Printf("listening at %s\n", addr)
+	logger := log.New(os.Stderr, "", log.Ldate|log.Ltime)
 
 	opts := []grpc.ServerOption{
 		grpc.Creds(creds),
-		grpc.ChainUnaryInterceptor(unaryAuthInterceptor, unaryLogInterceptor),
-		grpc.ChainStreamInterceptor(streamAuthInterceptor, streamLogInterceptor),
+		grpc.ChainUnaryInterceptor(
+			auth.UnaryServerInterceptor(validateAuthToken),
+			logging.UnaryServerInterceptor(logCalls(logger)),
+		),
+		grpc.ChainStreamInterceptor(
+			auth.StreamServerInterceptor(validateAuthToken),
+			logging.StreamServerInterceptor(logCalls(logger)),
+		),
 	}
 	s := grpc.NewServer(opts...)
 

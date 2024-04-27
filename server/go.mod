@@ -10,6 +10,7 @@ require (
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v1.0.4 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/lyft/protoc-gen-star/v2 v2.0.3 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
