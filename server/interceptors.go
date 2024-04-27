@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -44,5 +45,15 @@ func streamAuthInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.Str
 		return err
 	}
 
+	return handler(srv, ss)
+}
+
+func unaryLogInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Println(info.FullMethod, "called")
+	return handler(ctx, req)
+}
+
+func streamLogInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Println(info.FullMethod, "called")
 	return handler(srv, ss)
 }
