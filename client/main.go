@@ -36,7 +36,7 @@ func main() {
 
 	retryOpts := []retry.CallOption{
 		retry.WithMax(3),
-		retry.WithBackoff(retry.BackoffExponential(100*time.Millisecond)),
+		retry.WithBackoff(retry.BackoffExponential(100 * time.Millisecond)),
 		retry.WithCodes(codes.Unavailable),
 	}
 

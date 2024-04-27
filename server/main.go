@@ -122,7 +122,7 @@ func main() {
 	metricsServer := newMetricsServer(httpAddr, reg)
 	g.Go(func() error {
 		log.Printf("metrics server listening at %s\n", httpAddr)
-		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed{
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("failed to serve metrics: %v\n", err)
 			return err
 		}

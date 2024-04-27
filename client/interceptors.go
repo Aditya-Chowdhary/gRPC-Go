@@ -15,7 +15,7 @@ const (
 func unaryAuthInterceptor(ctx context.Context, method string, req interface{}, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	ctx = metadata.AppendToOutgoingContext(ctx, authTokenKey, authTokenValue)
 	err := invoker(ctx, method, req, reply, cc, opts...)
-	
+
 	return err
 }
 
