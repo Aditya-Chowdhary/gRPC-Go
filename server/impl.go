@@ -16,18 +16,8 @@ import (
 )
 
 func (s *server) AddTask(_ context.Context, in *pb.AddTaskRequest) (*pb.AddTaskResponse, error) {
-	if len(in.Description) == 0 {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"expected a task description, got an empty string",
-		)
-	}
-
-	if in.DueDate.AsTime().Before(time.Now().UTC()) {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"expected a task due_date in the future",
-		)
+	if err := in.Validate(); err != nil {
+		return nil, err
 	}
 
 	id, err := s.d.addTask(in.Description, in.DueDate.AsTime())
