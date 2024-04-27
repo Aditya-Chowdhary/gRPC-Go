@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -142,7 +143,10 @@ func printTasks(c pb.TodoServiceClient, fm *fieldmaskpb.FieldMask) {
 }
 
 func updateTask(c pb.TodoServiceClient, reqs ...*pb.UpdateTasksRequest) {
-	stream, err := c.UpdateTasks(context.Background())
+	ctx := context.Background()
+	ctx = metadata.AppendToOutgoingContext(ctx, "auth_token", "authd")
+
+	stream, err := c.UpdateTasks(ctx)
 	if err != nil {
 		log.Fatalf("unexpected error: %v", err)
 	}

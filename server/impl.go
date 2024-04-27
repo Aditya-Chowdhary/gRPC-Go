@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/Aditya-Chowdhary/gRPC-Go/proto/todo/v2"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -85,6 +86,20 @@ func Filter(msg proto.Message, mask *fieldmaskpb.FieldMask) {
 }
 
 func (s *server) UpdateTasks(stream pb.TodoService_UpdateTasksServer) error {
+	ctx := stream.Context()
+	md, _ := metadata.FromIncomingContext(ctx)
+	if t, ok := md["auth_token"]; ok {
+		switch {
+		case len(t) != 1:
+			return status.Errorf(codes.InvalidArgument, "auth_token should contain only 1 value")
+		case t[0] != "authd": // Simulate checking if auth token is valid
+			return status.Errorf(codes.Unauthenticated, "incorrect auth_token")
+		}
+	} else {
+		return status.Errorf(codes.Unauthenticated, "failed to get auth_token")
+	}
+
+
 	for {
 		req, err := stream.Recv()
 
